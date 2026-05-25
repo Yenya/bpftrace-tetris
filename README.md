@@ -53,3 +53,4 @@ It can be changed by modifying the interval value of `interval:ms:99`.
 
 ## License
 GPL v2 or later
+
