@@ -21,6 +21,17 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y bpftrace expect
 
+      - name: Dry-run tetris.bt
+        run: |
+          #!/usr/bin/env bash
+          set -eux
+          bpftrace --dry-run tetris.bt
+          if [ $? -ne 0 ]
+          then
+            echo "bpftrace --dry-run tetris.bt FAILED" >&2
+            exit 1
+          fi
+          
       - name: Test bpftrace-tetris with simulated input
         run: |
           #!/usr/bin/env bash
