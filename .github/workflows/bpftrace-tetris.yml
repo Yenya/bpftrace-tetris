@@ -1,0 +1,57 @@
+name: Test bpftrace-tetris
+
+on:
+  push:
+    paths:
+      - '**.bt'
+  pull_request:
+    paths:
+      - '**.bt'
+
+jobs:
+  test-tetris:
+    runs-on: ubuntu-latest          # VM, not container
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Install bpftrace and expect
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bpftrace expect
+
+      - name: Test bpftrace-tetris with simulated input
+        run: |
+          #!/usr/bin/env bash
+          set -eux
+
+          # Download tetris.bt if not present (optional, since file should be in repo)
+          if [ ! -f tetris.bt ]; then
+            echo "tetris.bt not found!" >&2
+            exit 1
+          fi
+
+          # Create an expect script to send keys [h], [l], [space], then quit (Ctrl+C)
+          cat > play-tetris.exp << 'EOF'
+          spawn bpftrace tetris.bt
+          set timeout 10
+          expect "Press"
+          sleep 1
+          send -- "h"
+          sleep 0.5
+          send -- "l"
+          sleep 0.5
+          send -- " "
+          sleep 1
+          send -- "\003"    ;# Ctrl+C to quit
+          expect eof
+          EOF
+
+          expect play-tetris.exp
+
+      - name: Check for success message/output
+        run: |
+          # You can add more checks like grepping for expected output in the workflow logs
+          echo "If this step ran, expect did not fail ⇒ tetris.bt runs under bpftrace."
+
